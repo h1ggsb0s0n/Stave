@@ -31,6 +31,9 @@ function drawLine(x,y,x2){
 function Note(radius){
 
   this.radius = radius;
+  this.correct;
+  this.value;
+  this.linePosition;
 
   this.draw = function(x,y,color){
     c.beginPath();
@@ -40,6 +43,22 @@ function Note(radius){
     c.stroke();
     c.fill();
     //console.log("note drawn at: " + y);
+  }
+
+  this.isCorrect = function(){
+    this.correct = true;
+  }
+
+  this.isFalse = function(){
+    this.correct = false;
+  }
+
+  this.getLinePosition = function(){
+    return this.linePosition;
+  }
+
+  this.getNote = function(){
+    return this.value;
   }
 }
 
@@ -66,6 +85,7 @@ function Stave(x,y,length,gap){
   this.gap = gap;
   this.note = new Note(gap/2);
   this.currentLineNumber;
+  this.currentNote;
   this.length = length;
   this.addedNotes = [];
 
@@ -185,7 +205,7 @@ function Stave(x,y,length,gap){
   }
 
   this.update = function(){
-    this.drawOnLine(this.closestLine2());
+    this.drawOnLine((this.closestLine2()));
   }
 
 
