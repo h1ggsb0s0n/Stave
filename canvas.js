@@ -39,6 +39,7 @@ function Note(radius){
     c.fillStyle = color; //selects any color in the array
     c.stroke();
     c.fill();
+    //console.log("note drawn at: " + y);
   }
 }
 
@@ -56,10 +57,10 @@ function HelpingLine(x,y,length){
 function Stave(x,y,length,gap){
   this.x = x;
   this.y = y;
-  this.yTrebleFirstHelpLine = this.y - gap*5;
+  this.yTrebleFirstHelpLine = this.y - (gap/2)*5;
   this.yTrebleLastHelpLine = this.y + gap* 13;
   this.yBassFirstHelpLine = this.y + gap*15;
-  this.yBassLastHelpLine = this.y + gap*33;
+  this.yBassLastHelpLine = this.y + (gap/2)*38;
   this.trebleNotes = ["D","C","H","A","G","F","E","D","C","H","A","G","F","E","D","C","H","A","G"];
   this.bassNotes =  ["F","E","D","C","H","A","G","F","E","D","C","H","A","G","F","E","D","C","H"];
   this.gap = gap;
@@ -108,6 +109,7 @@ function Stave(x,y,length,gap){
   }
 
 
+
   this.drawNote = function(x,y,color){
     this.note.draw(x+(this.length/2),y,color);
   }
@@ -119,20 +121,42 @@ function Stave(x,y,length,gap){
     } return false;
   }
 
-  //returns the closestLine relative to the mouseposition
+
+
+  //returns the closestLine relative to the current mouse position in the canvas
   this.closestLine = function(){
-    var line = this.yTrebleFirstHelpLine;
+    var yLine = this.yTrebleFirstHelpLine;
+    console.log("yLineStart: "+ yLine)
     for (var i = 0; i < 33; i++) {
-      console.log("MouseY "+mouse.y);
-      console.log("i = " + i);
-      if(mouse.y < y){
-        return i--;
+      if(mouse.y + gap/4 < yLine){
+
+        return i;
+
       }
-      line = line + this.gap;
+      yLine = yLine + (this.gap/2);
+      console.log("yLine after Increment: "+ yLine);
     }
   }
 
+  this.closestLine2 = function(){
+    var distanceToFirstLine = mouse.y - this.yTrebleFirstHelpLine;
+    var numberOfFirstLine = Math.floor(distanceToFirstLine/(this.gap/2));
+    var numberOfSecondLine = numberOfFirstLine + 1;
+    if(distanceToFirstLine < 0){
+      return -5;
+    }
+    else if(mouse.y > this.yBassLastHelpLine){
+      return 38-5;
+    }
+    else if(mouse.y - numberOfFirstLine*(this.gap/2) > (numberOfSecondLine*(this.gap/2) - mouse.y)){
+      return numberOfFirstLine -5;
+    } else
+    return numberOfSecondLine -5 ;
+
+  }
+
   //returns the y position of a selected line
+  //not working
   this.returnLinePosition = function(lineNumber){
     return this.y + (lineNumber * (this.gap/2));
   }
@@ -142,7 +166,6 @@ function Stave(x,y,length,gap){
     this.note.draw(this.x +(this.length/2), yLinePosition);
     if(linenumber = -1 || lineNumber)
     this.currentLineNumber = lineNumber;
-
   }
 
   this.drawHelpLine = function(lineNumber){
@@ -161,12 +184,16 @@ function Stave(x,y,length,gap){
     }, this);
   }
 
+  this.update = function(){
+    this.drawOnLine(this.closestLine2());
+  }
+
 
   //this.note.draw(this.x + (this.length/2),this.y);
   //umstellung -> return line Positionthis.y
-  this.update = function(){
+  this.update2 = function(){
 
-    //treble
+    //Help Lines Trebble
     if(this.isOnLine(-5)){
       this.drawOnLine(-5);
       this.drawHelpLine(-4);
@@ -188,6 +215,9 @@ function Stave(x,y,length,gap){
     if(this.isOnLine(-1)){
       this.drawOnLine(-1);
     }
+
+    //Treble Lines
+
     if(this.isOnLine(0)){
       this.drawOnLine(0);
     } else if(this.isOnLine(1)){
@@ -260,6 +290,8 @@ function Stave(x,y,length,gap){
     }else if(this.isOnLine(26)){
       this.drawOnLine(26);
     } else if(this.isOnLine(27)){
+      this.drawOnLine(27);
+    } else if(this.isOnLine(28)){
       this.drawOnLine(28);
     }else if(this.isOnLine(29)){
       this.drawOnLine(29);
@@ -267,7 +299,7 @@ function Stave(x,y,length,gap){
       this.drawOnLine(30);
       this.drawHelpLine(30);
     }else if(this.isOnLine(31)){
-      this.drawOnLine(30);
+      this.drawOnLine(31);
       this.drawHelpLine(30);
     }else if(this.isOnLine(32)){
       this.drawOnLine(32);
@@ -300,8 +332,10 @@ function animate() {
 
 canvas.addEventListener("click", function(event){
   stave.addNoteToStave();
-  console.log(stave.closestLine());
-  console.log(stave.returnSelectedNote());
+  console.log()
+  console.log(stave.closestLine2());
+  //console.log(stave.closestLine());
+  //console.log(stave.returnSelectedNote());
 });
 
 animate();
