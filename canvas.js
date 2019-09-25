@@ -37,9 +37,9 @@ function Note(radius, xPosition){
   this.lineNumber;
   this.xPosition = xPosition;
 
-  this.drawNote = function(y,color){
+  this.drawNote = function(color){
     c.beginPath();
-    c.arc(this.xPosition, y, this.radius, 0, Math.PI * 2, false); // x, y, radius  ,startAngle, endAngle, drawcounterclockwise
+    c.arc(this.xPosition, this.linePosition, this.radius, 0, Math.PI * 2, false); // x, y, radius  ,startAngle, endAngle, drawcounterclockwise
     c.strokeStyle = color;
     c.fillStyle = color; //selects any color in the array
     c.stroke();
@@ -47,6 +47,10 @@ function Note(radius, xPosition){
     //console.log("note drawn at: " + y);
   }
 
+  this.setXPosition = function(x){
+    this.xPosition = x;
+  }
+//setCorrect
   this.isCorrect = function(){
     this.correct = true;
   }
@@ -55,19 +59,23 @@ function Note(radius, xPosition){
     this.correct = false;
   }
 
-  this.setLinePosition = function(linePosition){
-    this.linePosition = linePosition;
+  this.isInChord = function(){
+    return this.correct;
+  }
+
+  this.setLinePosition = function(y){
+    this.linePosition = y;
   }
 
   this.getLinePosition = function(){
     return this.linePosition;
   }
 
-  this.getNote = function(){
-    return this.value;
+  this.getNoteValue = function(){
+    return this.noteValue;
   }
 
-  this.addNoteValue = function(noteValue){
+  this.setNoteValue = function(noteValue){
     this.noteValue = noteValue;
   };
 
@@ -75,7 +83,7 @@ function Note(radius, xPosition){
     this.lineNumber = lineNumber;
   }
 
-  this.returnLineNumber = function(){
+  this.getLineNumber = function(){
     return this.lineNumber;
   }
 }
@@ -109,6 +117,7 @@ function Stave(x,y,length,gap){
   //rename to drawStaveLines
   this.drawStave = function(){
     //draw treble Lines
+    c.strokeStyle = "black";
     drawLine(this.x,this.y,this.x+this.length);
     drawLine(this.x,this.y+this.gap,this.x+this.length);
     drawLine(this.x,this.y+(this.gap*2),this.x+this.length);
@@ -127,19 +136,27 @@ function Stave(x,y,length,gap){
 
 //problem we do have more than 10
   this.addNoteToStave = function(){
-    this.addedNotes.push(this.note);
+
+    noteToAdd = new Note((gap/2), (this.x +(length/2)));
+    noteToAdd.setLinePosition(this.note.getLinePosition());
+    noteToAdd.setLineNumber(this.note.getLineNumber());
+    noteToAdd.setNoteValue(this.returnSelectedNote());
+    this.addedNotes.push(noteToAdd);
+    console.log(noteToAdd.getNoteValue());
+
   }
 
   //rename to calculateSelectedNote()
   this.returnSelectedNote = function(){
-    var currentLine = this.note.returnLineNumber();
-    if(this.note.returnLineNumber() < 15 ){
+    var currentLine = this.note.getLineNumber();
+    if(this.note.getLineNumber() < 15 ){
       return this.trebleNotes[currentLine + 5];
     } else{
       return this.bassNotes[currentLine - 15];
     }
   }
   //checks if notes have been added to the stav
+  //can be deleted
   this.containsNotes = function(){
     if(addedNotes.length > 0){
       return true;
@@ -188,11 +205,11 @@ function Stave(x,y,length,gap){
   //draws a Note on the line and
   this.drawOnLine = function(lineNumber){
     var yLinePosition = this.y + (lineNumber * (this.gap/2));
-    this.note.drawNote(yLinePosition);
     //why do i check for -1
     if(linenumber = -1 || lineNumber){
       this.note.setLinePosition(yLinePosition);
       this.note.setLineNumber(lineNumber);
+      this.note.drawNote();
     }
   }
 
@@ -203,13 +220,28 @@ function Stave(x,y,length,gap){
   }
 
   this.drawAddedNotes = function(){
-    this.addedNotes.forEach(function(lineNumber){
-      this.drawOnLine(lineNumber);
-      /*if(lineNumber < 0 || (lineNumber > 9 && lineNumber < 19) || lineNumber > 29){
-        this.drawHelpLine(lineNumber);
-      }*/
+    for (const n of this.addedNotes){
+      if(n.isInChord()){
+        n.drawNote("green");
+      } else{
+        n.drawNote("red");
+      }
 
-    }, this);
+    }
+  }
+
+  this.checkAnswers = function(chord){
+
+    for(const n of this.addedNotes){
+      noteValue = n.getNoteValue();
+      if(chord.includes(noteValue)){
+        n.isCorrect();
+        console.log(noteValue +" is  part of the Chord");
+      }else{
+        n.isFalse();
+        console.log(noteValue+" is not part of the Chord");
+      }
+    }
   }
 
   this.update = function(){
@@ -225,10 +257,12 @@ function animate() {
   stave.drawStave();
   stave.drawAddedNotes();
   stave.update();
+
   //achtung hier möchte er auch hier immer die linien grau machen.
   c.drawImage(trebleClefImage, 20,20);
   c.drawImage(bassClefImage, 40, 243, 130, 130);
 }
+
 
 canvas.addEventListener("click", function(event){
   stave.addNoteToStave();
@@ -237,5 +271,11 @@ canvas.addEventListener("click", function(event){
   //console.log(stave.closestLine());
   //console.log(stave.returnSelectedNote());
 });
+
+document.getElementById("checkAnswer").onclick = function(){
+  stave.checkAnswers(["C","E","G"]);
+};
+
+
 
 animate();
