@@ -23,21 +23,23 @@ canvas.addEventListener("mousemove", function(event){
 
 function drawLine(x,y,x2){
   c.beginPath();
-  c.moveTo(x,y)
+  c.moveTo(x,y);
   c.lineTo(x2,y);
   c.stroke();
 }
 
-function Note(radius){
+function Note(radius, xPosition){
 
   this.radius = radius;
   this.correct;
-  this.value;
+  this.noteValue;
   this.linePosition;
+  this.lineNumber;
+  this.xPosition = xPosition;
 
-  this.draw = function(x,y,color){
+  this.drawNote = function(y,color){
     c.beginPath();
-    c.arc(x, y, this.radius, 0, Math.PI * 2, false); // x, y, radius  ,startAngle, endAngle, drawcounterclockwise
+    c.arc(this.xPosition, y, this.radius, 0, Math.PI * 2, false); // x, y, radius  ,startAngle, endAngle, drawcounterclockwise
     c.strokeStyle = color;
     c.fillStyle = color; //selects any color in the array
     c.stroke();
@@ -53,12 +55,28 @@ function Note(radius){
     this.correct = false;
   }
 
+  this.setLinePosition = function(linePosition){
+    this.linePosition = linePosition;
+  }
+
   this.getLinePosition = function(){
     return this.linePosition;
   }
 
   this.getNote = function(){
     return this.value;
+  }
+
+  this.addNoteValue = function(noteValue){
+    this.noteValue = noteValue;
+  };
+
+  this.setLineNumber = function(lineNumber){
+    this.lineNumber = lineNumber;
+  }
+
+  this.returnLineNumber = function(){
+    return this.lineNumber;
   }
 }
 
@@ -83,13 +101,13 @@ function Stave(x,y,length,gap){
   this.trebleNotes = ["D","C","H","A","G","F","E","D","C","H","A","G","F","E","D","C","H","A","G"];
   this.bassNotes =  ["F","E","D","C","H","A","G","F","E","D","C","H","A","G","F","E","D","C","H"];
   this.gap = gap;
-  this.note = new Note(gap/2);
-  this.currentLineNumber;
-  this.currentNote;
+  this.note = new Note((gap/2), (this.x +(length/2)));
   this.length = length;
   this.addedNotes = [];
 
-  this.draw = function(){
+
+  //rename to drawStaveLines
+  this.drawStave = function(){
     //draw treble Lines
     drawLine(this.x,this.y,this.x+this.length);
     drawLine(this.x,this.y+this.gap,this.x+this.length);
@@ -106,17 +124,19 @@ function Stave(x,y,length,gap){
 
   }
 
+
 //problem we do have more than 10
   this.addNoteToStave = function(){
-    this.addedNotes.push(this.currentLineNumber);
-    return this.currentLineNumber;
+    this.addedNotes.push(this.note);
   }
 
+  //rename to calculateSelectedNote()
   this.returnSelectedNote = function(){
-    if(this.currentLineNumber < 15 ){
-      return this.trebleNotes[this.currentLineNumber + 5];
+    var currentLine = this.note.returnLineNumber();
+    if(this.note.returnLineNumber() < 15 ){
+      return this.trebleNotes[currentLine + 5];
     } else{
-      return this.bassNotes[this.currentLineNumber - 15];
+      return this.bassNotes[currentLine - 15];
     }
   }
   //checks if notes have been added to the stav
@@ -130,9 +150,6 @@ function Stave(x,y,length,gap){
 
 
 
-  this.drawNote = function(x,y,color){
-    this.note.draw(x+(this.length/2),y,color);
-  }
   //checks on which line (+- gap between the lines/4) the MousePointer is located.
   this.isOnLine = function(lineNumber){
     var linePosition = this.y + (lineNumber * (this.gap/2));
@@ -144,21 +161,8 @@ function Stave(x,y,length,gap){
 
 
   //returns the closestLine relative to the current mouse position in the canvas
+
   this.closestLine = function(){
-    var yLine = this.yTrebleFirstHelpLine;
-    console.log("yLineStart: "+ yLine)
-    for (var i = 0; i < 33; i++) {
-      if(mouse.y + gap/4 < yLine){
-
-        return i;
-
-      }
-      yLine = yLine + (this.gap/2);
-      console.log("yLine after Increment: "+ yLine);
-    }
-  }
-
-  this.closestLine2 = function(){
     var distanceToFirstLine = mouse.y - this.yTrebleFirstHelpLine;
     var numberOfFirstLine = Math.floor(distanceToFirstLine/(this.gap/2));
     var numberOfSecondLine = numberOfFirstLine + 1;
@@ -181,11 +185,15 @@ function Stave(x,y,length,gap){
     return this.y + (lineNumber * (this.gap/2));
   }
 
+  //draws a Note on the line and
   this.drawOnLine = function(lineNumber){
     var yLinePosition = this.y + (lineNumber * (this.gap/2));
-    this.note.draw(this.x +(this.length/2), yLinePosition);
-    if(linenumber = -1 || lineNumber)
-    this.currentLineNumber = lineNumber;
+    this.note.drawNote(yLinePosition);
+    //why do i check for -1
+    if(linenumber = -1 || lineNumber){
+      this.note.setLinePosition(yLinePosition);
+      this.note.setLineNumber(lineNumber);
+    }
   }
 
   this.drawHelpLine = function(lineNumber){
@@ -205,135 +213,7 @@ function Stave(x,y,length,gap){
   }
 
   this.update = function(){
-    this.drawOnLine((this.closestLine2()));
-  }
-
-
-  //this.note.draw(this.x + (this.length/2),this.y);
-  //umstellung -> return line Positionthis.y
-  this.update2 = function(){
-
-    //Help Lines Trebble
-    if(this.isOnLine(-5)){
-      this.drawOnLine(-5);
-      this.drawHelpLine(-4);
-      this.drawHelpLine(-2);
-    }
-    if(this.isOnLine(-4)){
-      this.drawOnLine(-4);
-      this.drawHelpLine(-4);
-      this.drawHelpLine(-2);
-    }
-    if(this.isOnLine(-3)){
-      this.drawOnLine(-3);
-      this.drawHelpLine(-2);
-    }
-    if(this.isOnLine(-2)){
-      this.drawOnLine(-2);
-      this.drawHelpLine(-2);
-    }
-    if(this.isOnLine(-1)){
-      this.drawOnLine(-1);
-    }
-
-    //Treble Lines
-
-    if(this.isOnLine(0)){
-      this.drawOnLine(0);
-    } else if(this.isOnLine(1)){
-      this.drawOnLine(1);
-    } else if(this.isOnLine(2)){
-      this.drawOnLine(2);
-    } else if(this.isOnLine(3)){
-      this.drawOnLine(3);
-    } else if(this.isOnLine(4)){
-      this.drawOnLine(4);
-    } else if(this.isOnLine(5)){
-      this.drawOnLine(5);
-    } else if(this.isOnLine(6)){
-      this.drawOnLine(6);
-    }else if(this.isOnLine(7)){
-      this.drawOnLine(7);
-    } else if(this.isOnLine(8)){
-      this.drawOnLine(8);
-    }else if(this.isOnLine(9)){
-      this.drawOnLine(9);
-    }else if(this.isOnLine(10)){
-      this.drawOnLine(10);
-      this.drawHelpLine(10);
-    }else if(this.isOnLine(11)){
-      this.drawOnLine(11);
-      this.drawHelpLine(10);
-    }else if(this.isOnLine(12)){
-      this.drawOnLine(12);
-      this.drawHelpLine(10);
-      this.drawHelpLine(12);
-    }else if(this.isOnLine(13)){
-      this.drawOnLine(13);
-      this.drawHelpLine(10);
-      this.drawHelpLine(12);
-    }
-
-    //bass
-    else if(this.isOnLine(15)){
-      this.drawOnLine(15);
-      this.drawHelpLine(16);
-      this.drawHelpLine(18);
-    }
-    else if(this.isOnLine(16)){
-      this.drawOnLine(16);
-      this.drawHelpLine(16);
-      this.drawHelpLine(18);
-    }
-    else if(this.isOnLine(17)){
-      this.drawOnLine(17);
-      this.drawHelpLine(18);
-    }
-    else if(this.isOnLine(18)){
-      this.drawOnLine(18);
-      this.drawHelpLine(18);
-    }
-    else if(this.isOnLine(19)){
-      this.drawOnLine(19);
-    }else if(this.isOnLine(20)){
-      this.drawOnLine(20);
-    } else if(this.isOnLine(21)){
-      this.drawOnLine(21);
-    } else if(this.isOnLine(22)){
-      this.drawOnLine(22);
-    } else if(this.isOnLine(23)){
-      this.drawOnLine(23);
-    } else if(this.isOnLine(24)){
-      this.drawOnLine(24);
-    } else if(this.isOnLine(25)){
-      this.drawOnLine(25);
-    }else if(this.isOnLine(26)){
-      this.drawOnLine(26);
-    } else if(this.isOnLine(27)){
-      this.drawOnLine(27);
-    } else if(this.isOnLine(28)){
-      this.drawOnLine(28);
-    }else if(this.isOnLine(29)){
-      this.drawOnLine(29);
-    }else if(this.isOnLine(30)){
-      this.drawOnLine(30);
-      this.drawHelpLine(30);
-    }else if(this.isOnLine(31)){
-      this.drawOnLine(31);
-      this.drawHelpLine(30);
-    }else if(this.isOnLine(32)){
-      this.drawOnLine(32);
-      this.drawHelpLine(30);
-      this.drawHelpLine(32);
-    }else if(this.isOnLine(33)){
-      this.drawOnLine(33);
-      this.drawHelpLine(30);
-      this.drawHelpLine(32);
-    }
-
-    else {
-      this.draw();
-    }
+    this.drawOnLine((this.closestLine()));
   }
 }
 
@@ -342,7 +222,7 @@ function animate() {
 
   requestAnimationFrame(animate); //creates a loop for us -> Function Animate
   c.clearRect(0, 0, innerWidth, innerHeight);
-  stave.draw();
+  stave.drawStave();
   stave.drawAddedNotes();
   stave.update();
   //achtung hier möchte er auch hier immer die linien grau machen.
@@ -353,7 +233,7 @@ function animate() {
 canvas.addEventListener("click", function(event){
   stave.addNoteToStave();
   console.log()
-  console.log(stave.closestLine2());
+  console.log(stave.closestLine());
   //console.log(stave.closestLine());
   //console.log(stave.returnSelectedNote());
 });
