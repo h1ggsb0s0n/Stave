@@ -31,7 +31,7 @@ function drawLine(x,y,x2){
 function Note(radius, xPosition){
 
   this.radius = radius;
-  this.correct;
+  this.correct = notAssigned;
   this.noteValue;
   this.linePosition;
   this.lineNumber;
@@ -221,7 +221,10 @@ function Stave(x,y,length,gap){
 
   this.drawAddedNotes = function(){
     for (const n of this.addedNotes){
-      if(n.isInChord()){
+      if(n.isInChord() === "notAssigned"){
+        n.drawNote("grey");
+      }
+      else if(n.isInChord()){
         n.drawNote("green");
       } else{
         n.drawNote("red");
