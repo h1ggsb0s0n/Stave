@@ -31,7 +31,7 @@ function drawLine(x,y,x2){
 function Note(radius, xPosition){
 
   this.radius = radius;
-  this.correct = notAssigned;
+  this.correct = "notAssigned";
   this.noteValue;
   this.linePosition;
   this.lineNumber;
